@@ -1,0 +1,11 @@
+{
+	"name": "html2md",
+	"version": "0.1.0",
+	"main": "./lib/html2md.js",
+	"dependencies": {
+		"bti-dom-utils": "^1.0.2",
+		"jsdom": "^2.0.0",
+		"special-entities": "^1.0.2",
+		"underscore": "^1.7.0"
+	}
+}
