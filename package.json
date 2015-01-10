@@ -21,7 +21,7 @@
 	"scripts": {
 		"dev": "node test/browser",
 		"test": "grunt build-test && ./node_modules/.bin/mocha test",
-		"build-docs": "./node_modules/.bin/doxxo -l bti ./lib/*.js"
+		"build-docs": "./node_modules/.bin/doxxo -i README.md -l bti lib/*.js README.md"
 	},
 	"dependencies": {
 		"bti-dom-utils": "^1.0.2",
@@ -31,7 +31,7 @@
 	},
 	"devDependencies": {
 		"chai": "^1.10.0",
-		"doxxo": "^0.1.4",
+		"doxxo": "^0.1.5",
 		"grunt": "^0.4.5",
 		"grunt-browserify": "^3.2.1",
 		"grunt-contrib-clean": "^0.6.0",

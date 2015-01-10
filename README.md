@@ -30,7 +30,7 @@ var markdown = html2md("<h1>Hello World</h1>");
 console.log(markdown); // -> # Hello World
 ```
 
-Please see [the documentation](http://beneaththeink.github.io/html2md) for specifics.
+Please see [the documentation](http://beneaththeink.github.io/html2md/html2md.html) for specifics.
 
 ## Building from Scratch
 
