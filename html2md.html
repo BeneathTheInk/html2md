@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>HTML2MD</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+      <ul id="jump_to">
+        <li>
+          <a class="large" href="javascript:void(0);">Jump To &hellip;</a>
+          <a class="small" href="javascript:void(0);">+</a>
+          <div id="jump_wrapper">
+          <div id="jump_page_wrapper">
+            <div id="jump_page">
+              
+                
+                <a class="source" href="index.html">
+                  README.md
+                </a>
+              
+                
+                <a class="source" href="html2md.html">
+                  html2md.js
+                </a>
+              
+            </div>
+          </div>
+        </li>
+      </ul>
+    
+    <ul class="sections">
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap for-h1">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <h1>HTML2MD</h1>
+<p>HTML2MD attempts to convert HTML into Markdown by reducing an HTML document into simple, Markdown-compatible parts. This library is compatible with both browsers and Node.js.</p><p>To use, pass a string of HTML to the function.</p><pre><code class="lang-javascript"><span class="hljs-keyword">var</span> markdown = html2md(<span class="hljs-string">"&lt;h1&gt;Hello World&lt;/h1&gt;"</span>);
+<span class="hljs-built_in">console</span>.log(markdown); <span class="hljs-comment">// -&gt; # Hello World</span>
+</code></pre>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> _ = <span class="hljs-built_in">require</span>(<span class="hljs-string">"underscore"</span>),
+    Entities = <span class="hljs-built_in">require</span>(<span class="hljs-string">"special-entities"</span>),
+    DOMUtils = <span class="hljs-built_in">require</span>(<span class="hljs-string">"bti-dom-utils"</span>);
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">html2md</span><span class="hljs-params">(doc, options)</span> </span>{
+    <span class="hljs-keyword">return</span> html2md.toMarkdown(html2md.parse(doc, options));
+}
+
+<span class="hljs-built_in">module</span>.exports = html2md;
+
+<span class="hljs-keyword">var</span> SCRIPT_REGEX = <span class="hljs-regexp">/&lt;script\b[^&lt;]*(?:(?!&lt;\/script&gt;)&lt;[^&lt;]*)*&lt;\/script&gt;/gi</span>;
+
+<span class="hljs-keyword">var</span> block_elements = [ <span class="hljs-string">"article"</span>, <span class="hljs-string">"aside"</span>, <span class="hljs-string">"blockquote"</span>, <span class="hljs-string">"body"</span>, <span class="hljs-string">"button"</span>, <span class="hljs-string">"canvas"</span>, <span class="hljs-string">"caption"</span>, <span class="hljs-string">"col"</span>, <span class="hljs-string">"colgroup"</span>, <span class="hljs-string">"dd"</span>, <span class="hljs-string">"div"</span>, <span class="hljs-string">"dl"</span>, <span class="hljs-string">"dt"</span>, <span class="hljs-string">"embed"</span>, <span class="hljs-string">"fieldset"</span>, <span class="hljs-string">"figcaption"</span>, <span class="hljs-string">"figure"</span>, <span class="hljs-string">"footer"</span>, <span class="hljs-string">"form"</span>, <span class="hljs-string">"h1"</span>, <span class="hljs-string">"h2"</span>, <span class="hljs-string">"h3"</span>, <span class="hljs-string">"h4"</span>, <span class="hljs-string">"h5"</span>, <span class="hljs-string">"h6"</span>, <span class="hljs-string">"header"</span>, <span class="hljs-string">"hgroup"</span>, <span class="hljs-string">"hr"</span>, <span class="hljs-string">"li"</span>, <span class="hljs-string">"map"</span>, <span class="hljs-string">"object"</span>, <span class="hljs-string">"ol"</span>, <span class="hljs-string">"output"</span>, <span class="hljs-string">"p"</span>, <span class="hljs-string">"pre"</span>, <span class="hljs-string">"progress"</span>, <span class="hljs-string">"section"</span>, <span class="hljs-string">"table"</span>, <span class="hljs-string">"tbody"</span>, <span class="hljs-string">"textarea"</span>, <span class="hljs-string">"tfoot"</span>, <span class="hljs-string">"th"</span>, <span class="hljs-string">"thead"</span>, <span class="hljs-string">"tr"</span>, <span class="hljs-string">"ul"</span>, <span class="hljs-string">"video"</span> ];
+
+<span class="hljs-keyword">var</span> empty_tags = ([ <span class="hljs-string">"hr"</span>, <span class="hljs-string">"br"</span>, <span class="hljs-string">"img"</span>, <span class="hljs-string">"video"</span>, <span class="hljs-string">"audio"</span> ]).join(<span class="hljs-string">", "</span>);
+
+<span class="hljs-keyword">var</span> markdown_block_tags = [ <span class="hljs-string">"blockquote"</span>, <span class="hljs-string">"h1"</span>, <span class="hljs-string">"h2"</span>, <span class="hljs-string">"h3"</span>, <span class="hljs-string">"h4"</span>, <span class="hljs-string">"h5"</span>, <span class="hljs-string">"h6"</span>, <span class="hljs-string">"hr"</span>, <span class="hljs-string">"li"</span>, <span class="hljs-string">"pre"</span>, <span class="hljs-string">"p"</span> ];
+
+<span class="hljs-keyword">var</span> markdown_empty_blocks = [ <span class="hljs-string">"hr"</span> ];
+
+<span class="hljs-keyword">var</span> markdown_inline_tags = {
+    <span class="hljs-string">"b, strong"</span>: <span class="hljs-string">"bold"</span>,
+    <span class="hljs-string">"i, em"</span>: <span class="hljs-string">"italic"</span>,
+    <span class="hljs-string">"code"</span>: <span class="hljs-string">"code"</span>
+};
+
+<span class="hljs-keyword">var</span> markdown_syntax = {
+    hr:         <span class="hljs-string">"- - -"</span>,
+    br:         <span class="hljs-string">"  \n"</span>,
+    h1:         <span class="hljs-string">"# "</span>,
+    h2:         <span class="hljs-string">"## "</span>,
+    h3:         <span class="hljs-string">"### "</span>,
+    h4:         <span class="hljs-string">"#### "</span>,
+    h5:         <span class="hljs-string">"##### "</span>,
+    h6:         <span class="hljs-string">"###### "</span>,
+    ul:         <span class="hljs-string">"* "</span>,
+    ol:         <span class="hljs-string">"1. "</span>,
+    blockquote: <span class="hljs-string">"&gt; "</span>,
+    pre:        <span class="hljs-string">"  "</span>,
+    p:          <span class="hljs-string">""</span>,
+    bold:       <span class="hljs-string">"**"</span>,
+    italic:     <span class="hljs-string">"_"</span>,
+    code:       <span class="hljs-string">"`"</span>
+}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap for-h2">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <h2>parse()</h2>
+<p>This is where the magic happens. This method takes a string of HTML (or an HTML Document) and returns a Markdown abstract syntax tree.</p><h4>Arguments</h4>
+<ul>
+<li><strong>html</strong> <em>string | Document</em> - A string of HTML or a Document instance provided by the DOM.</li>
+<li><strong>options</strong> <em>object; optional</em> - An object of options.<ul>
+<li><strong>options.window</strong> <em>object</em> - The window object to use while parsing. This is to gain access to some global methods needed while parsing. Usually this is not needed because its value can be inferred.</li>
+</ul>
+</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>html2md.parse = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(doc, options)</span> </span>{
+    options = options || {};
+
+    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> doc === <span class="hljs-string">"string"</span>) {
+        doc = html2md.toDOM(doc);
+    }
+
+    <span class="hljs-keyword">var</span> win = options.window ? options.window :
+        <span class="hljs-keyword">typeof</span> <span class="hljs-built_in">window</span> !== <span class="hljs-string">"undefined"</span> ? <span class="hljs-built_in">window</span> :
+        doc.parentWindow || doc.defaultView;
+
+    <span class="hljs-keyword">if</span> (win == <span class="hljs-literal">null</span>) {
+        <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">"Missing window reference."</span>);
+    }
+
+    <span class="hljs-keyword">var</span> utils = DOMUtils(win);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap for-h4">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <h4>STEP 1: Convert HTML into a set of basic blocks.</h4>
+<p>Markdown organizes a document into a set of blocks and unlike HTML
+blocks, these cannot contain other blocks, only inline elements. This is
+accomplished by reducing the HTML to its smallest block parts, with the
+assumption that block elements usually define separate bodies of
+information within an HTML document.</p><p>Each block is given a type based on the Markdown types. This type is
+determined from the closest ancestor with one of the following tags:
+<code>blockquote</code>, <code>pre</code>, <code>li</code>, <code>hr</code>, <code>h1-6</code>. All other blocks become
+paragraphs.</p><p>This operates on a few assumptions, which outline its limitations:</p><ul>
+<li>Inline elements do not contain block elements.</li>
+<li>Standard HTML block elements are used to define and separate content.</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">var</span> blocks = compactBlocks(extractBlocks(doc.body));
+    
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">extractBlocks</span><span class="hljs-params">(node)</span> </span>{
+        <span class="hljs-keyword">var</span> currentBlock, blocks;
+
+        blocks = [];
+        extract(node);
+        <span class="hljs-keyword">return</span> blocks;
+
+        <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">addInline</span><span class="hljs-params">(el)</span> </span>{
+            <span class="hljs-keyword">if</span> (currentBlock != <span class="hljs-literal">null</span>) {
+                currentBlock.nodes.push(el);
+            } <span class="hljs-keyword">else</span> {
+                blocks.push({ type: <span class="hljs-string">"p"</span>, nodes: [ el ] });
+            }
+
+            <span class="hljs-keyword">return</span> blocks;
+        }
+
+        <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">extract</span><span class="hljs-params">(el)</span> </span>{
+            <span class="hljs-keyword">if</span> (el.nodeType !== <span class="hljs-number">1</span>) <span class="hljs-keyword">return</span> addInline(el);
+
+            <span class="hljs-keyword">var</span> tag = el.tagName.toLowerCase();
+            <span class="hljs-keyword">if</span> (!_.contains(block_elements, tag)) <span class="hljs-keyword">return</span> addInline(el);
+
+            <span class="hljs-comment">// remove the current block if it's empty</span>
+            <span class="hljs-keyword">if</span> (currentBlock != <span class="hljs-literal">null</span> &amp;&amp;
+                !currentBlock.nodes.length &amp;&amp;
+                !_.contains(markdown_empty_blocks, currentBlock.type) &amp;&amp;
+                _.last(blocks) === currentBlock) blocks.pop();
+
+            <span class="hljs-comment">// add a new block</span>
+            blocks.push(currentBlock = {
+                type: _.contains(markdown_block_tags, tag) ? tag : <span class="hljs-string">"p"</span>,
+                nodes: []
+            });
+
+            <span class="hljs-comment">// process children</span>
+            _.each(el.childNodes, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(child)</span> </span>{
+                extract(child);
+            });
+
+            <span class="hljs-comment">// reset current block</span>
+            currentBlock = <span class="hljs-literal">null</span>;
+        }
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">compactBlocks</span><span class="hljs-params">(blocks)</span> </span>{
+        <span class="hljs-keyword">return</span> blocks.filter(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(b)</span> </span>{
+            <span class="hljs-keyword">var</span> emptyBlock = _.contains(markdown_empty_blocks, b.type);
+
+            <span class="hljs-comment">// delete nodes array if this is an empty block</span>
+            <span class="hljs-keyword">if</span> (emptyBlock) <span class="hljs-keyword">delete</span> b.nodes;
+
+            <span class="hljs-comment">// make sure the block isn't empty</span>
+            <span class="hljs-keyword">return</span> emptyBlock || _.some(b.nodes, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(n)</span> </span>{
+                <span class="hljs-keyword">return</span> utils.getTextContent(n).trim() != <span class="hljs-string">""</span> ||
+                    (n.nodeType === <span class="hljs-number">1</span> &amp;&amp; (utils.matchesSelector(n, empty_tags) || n.querySelector(empty_tags)));
+            });
+        });
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap for-h4">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <h4>STEP 2: Convert inline HTML into inline Markdown.</h4>
+<p>Basically we push each text node onto a stack, accounting for specific
+styling like italics and bold. Other inline elements like <code>br</code> and <code>img</code>
+are preserved, but everything else is thrown out.</p>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    blocks.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(b)</span> </span>{
+        <span class="hljs-keyword">if</span> (_.contains(markdown_empty_blocks, b.type)) <span class="hljs-keyword">return</span>;
+        
+        b.content = cleanInlines(b.nodes.reduce(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(m, n)</span> </span>{
+            <span class="hljs-keyword">return</span> extractInlines(n, m);
+        }, []));
+    });
+
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">extractInlines</span><span class="hljs-params">(el, inlines)</span> </span>{
+        <span class="hljs-keyword">var</span> lastInline, styles, content;
+
+        <span class="hljs-keyword">if</span> (inlines == <span class="hljs-literal">null</span>) inlines = [];
+
+        <span class="hljs-keyword">switch</span> (el.nodeType) {
+            <span class="hljs-keyword">case</span> <span class="hljs-number">1</span>:
+                <span class="hljs-keyword">switch</span> (el.tagName.toLowerCase()) {
+                    <span class="hljs-keyword">case</span> <span class="hljs-string">"br"</span>:
+                        inlines.push({ type: <span class="hljs-string">"br"</span> });
+                        <span class="hljs-keyword">break</span>;
+
+                    <span class="hljs-keyword">case</span> <span class="hljs-string">"img"</span>:
+                        inlines.push({
+                            type: <span class="hljs-string">"img"</span>,
+                            src: el.getAttribute(<span class="hljs-string">"src"</span>)
+                        });
+                        <span class="hljs-keyword">break</span>;
+
+                    <span class="hljs-keyword">default</span>:
+                        _.each(el.childNodes, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(n)</span> </span>{
+                            extractInlines(n, inlines);
+                        });
+                        <span class="hljs-keyword">break</span>;
+                }
+
+                <span class="hljs-keyword">break</span>;
+
+            <span class="hljs-keyword">case</span> <span class="hljs-number">3</span>:
+                lastInline = _.last(inlines);
+                content = Entities.normalizeXML(utils.getTextContent(el), <span class="hljs-string">"html"</span>);
+                styles = _.filter(markdown_inline_tags, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(s, sel)</span> </span>{
+                    <span class="hljs-keyword">return</span> !!closest(el, sel);
+                });
+
+                <span class="hljs-keyword">if</span> (lastInline &amp;&amp; lastInline.content != <span class="hljs-literal">null</span> &amp;&amp; _.isEqual(lastInline.styles, styles)) {
+                    lastInline.content += content;
+                } <span class="hljs-keyword">else</span> {
+                    inlines.push({
+                        type: <span class="hljs-string">"text"</span>,
+                        content: content,
+                        styles: styles
+                    });
+                }
+
+                <span class="hljs-keyword">break</span>;
+        }
+
+        <span class="hljs-keyword">return</span> inlines;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">cleanInlines</span><span class="hljs-params">(inlines)</span> </span>{
+        <span class="hljs-comment">// clean up whitespace and drop empty inlines</span>
+        inlines = inlines.reduce(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(m, inline, i)</span> </span>{
+            <span class="hljs-keyword">if</span> (inline.type !== <span class="hljs-string">"text"</span>) m.push(inline);
+            <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">var</span> prev = i &gt; <span class="hljs-number">0</span> ? inlines[i-<span class="hljs-number">1</span>] : <span class="hljs-literal">null</span>;
+
+                <span class="hljs-comment">// reduce multiple spaces to one</span>
+                inline.content = inline.content.replace(<span class="hljs-regexp">/\s+/g</span>, <span class="hljs-string">" "</span>);
+
+                <span class="hljs-comment">// remove leading space if previous inline has trailing space</span>
+                <span class="hljs-keyword">if</span> (inline.content[<span class="hljs-number">0</span>] === <span class="hljs-string">" "</span> &amp;&amp; prev &amp;&amp; (
+                    prev.type === <span class="hljs-string">"br"</span> || (
+                    prev.type === <span class="hljs-string">"text"</span> &amp;&amp;
+                    prev.content[prev.content.length - <span class="hljs-number">1</span>] === <span class="hljs-string">" "</span>)
+                )) {
+                    inline.content = inline.content.substr(<span class="hljs-number">1</span>);
+                }
+
+                <span class="hljs-comment">// only add if this has real content</span>
+                <span class="hljs-keyword">if</span> (inline.content) m.push(inline);
+            }
+
+            <span class="hljs-keyword">return</span> m;
+        }, []);
+
+        <span class="hljs-comment">// trim leading whitespace</span>
+        <span class="hljs-keyword">while</span> (inlines.length &amp;&amp; inlines[<span class="hljs-number">0</span>].type === <span class="hljs-string">"text"</span>) {
+            inlines[<span class="hljs-number">0</span>].content = inlines[<span class="hljs-number">0</span>].content.replace(<span class="hljs-regexp">/^\s+/</span>, <span class="hljs-string">""</span>);
+            <span class="hljs-keyword">if</span> (inlines[<span class="hljs-number">0</span>].content) <span class="hljs-keyword">break</span>;
+            inlines.shift();
+        }
+
+        <span class="hljs-comment">// trim trailing whitespace</span>
+        <span class="hljs-keyword">var</span> lastInline;
+        <span class="hljs-keyword">while</span> (inlines.length &amp;&amp; (lastInline = _.last(inlines)).type === <span class="hljs-string">"text"</span>) {
+            lastInline.content = lastInline.content.replace(<span class="hljs-regexp">/\s+$/</span>, <span class="hljs-string">""</span>);
+            <span class="hljs-keyword">if</span> (lastInline.content) <span class="hljs-keyword">break</span>;
+            inlines.pop();
+        }
+
+        <span class="hljs-keyword">return</span> inlines;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">closest</span><span class="hljs-params">(el, selector)</span> </span>{
+        <span class="hljs-keyword">while</span> (el != <span class="hljs-literal">null</span>) {
+            <span class="hljs-keyword">if</span> (el.nodeType === <span class="hljs-number">1</span> &amp;&amp; utils.matchesSelector(el, selector)) <span class="hljs-keyword">return</span> el;
+            el = el.parentNode;
+        }
+
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">null</span>;
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap for-h4">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <h4>STEP 3: Clean up</h4>
+<p>The last step is to clean up the resulting AST before returning it.</p>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-comment">// cannot be empty unless otherwise specified</span>
+    blocks = blocks.filter(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(b)</span> </span>{
+        <span class="hljs-keyword">return</span> _.contains(markdown_empty_blocks, b.type) || b.content.length;
+    });
+
+    <span class="hljs-comment">// remove DOM nodes reference to keep it clean</span>
+    blocks.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(b)</span> </span>{ <span class="hljs-keyword">delete</span> b.nodes; });
+
+    <span class="hljs-keyword">return</span> blocks;
+}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap for-h2">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <h2>toMarkdown()</h2>
+<p>This methods converts the output of <code>.parse()</code> into a string of Markdown.</p><h4>Arguments</h4>
+<ul>
+<li><strong>tree</strong> <em>object</em> - A Markdown AST object returned from <code>.parse()</code>.</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>html2md.toMarkdown = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(tree)</span> </span>{
+    <span class="hljs-keyword">return</span> tree.map(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(block)</span> </span>{
+        <span class="hljs-keyword">var</span> activeStyles = [],
+            content = <span class="hljs-string">""</span>;
+
+        <span class="hljs-keyword">if</span> (block.content != <span class="hljs-literal">null</span>) {
+            block.content.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(inline)</span> </span>{
+                <span class="hljs-keyword">switch</span> (inline.type) {
+                    <span class="hljs-keyword">case</span> <span class="hljs-string">"text"</span>:
+                        updateStyles(inline.styles);
+                        content += inline.content;
+                        <span class="hljs-keyword">break</span>;
+
+                    <span class="hljs-keyword">case</span> <span class="hljs-string">"br"</span>:
+                        content += markdown_syntax.br;
+                        <span class="hljs-keyword">break</span>;
+
+                    <span class="hljs-keyword">case</span> <span class="hljs-string">"img"</span>:
+                        content += <span class="hljs-string">"![]("</span> + inline.src + <span class="hljs-string">")"</span>;
+                        <span class="hljs-keyword">break</span>;
+                }
+            });
+        
+            updateStyles();
+        }
+
+        <span class="hljs-keyword">switch</span> (block.type) {
+            <span class="hljs-keyword">case</span> <span class="hljs-string">"blockquote"</span>:
+            <span class="hljs-keyword">case</span> <span class="hljs-string">"pre"</span>:
+            <span class="hljs-keyword">case</span> <span class="hljs-string">"p"</span>:
+            <span class="hljs-keyword">case</span> <span class="hljs-string">"hr"</span>:
+            <span class="hljs-keyword">case</span> <span class="hljs-string">"h1"</span>:
+            <span class="hljs-keyword">case</span> <span class="hljs-string">"h2"</span>:
+            <span class="hljs-keyword">case</span> <span class="hljs-string">"h3"</span>:
+            <span class="hljs-keyword">case</span> <span class="hljs-string">"h4"</span>:
+            <span class="hljs-keyword">case</span> <span class="hljs-string">"h5"</span>:
+            <span class="hljs-keyword">case</span> <span class="hljs-string">"h6"</span>:
+                <span class="hljs-keyword">return</span> (markdown_syntax[block.type] || <span class="hljs-string">""</span>) + content;
+        }
+
+        <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">updateStyles</span><span class="hljs-params">(styles)</span> </span>{
+            <span class="hljs-keyword">if</span> (styles == <span class="hljs-literal">null</span>) styles = [];
+
+            <span class="hljs-comment">// close active styles</span>
+            <span class="hljs-keyword">var</span> close = _.difference(activeStyles, styles);
+            activeStyles = _.without.apply(_, [ activeStyles ].concat(close));
+            close.reverse().forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(style)</span> </span>{
+                content += markdown_syntax[style] || <span class="hljs-string">""</span>;
+            });
+
+            <span class="hljs-comment">// open new styles</span>
+            _.difference(styles, activeStyles).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(style)</span> </span>{
+                activeStyles.push(style);
+                content += markdown_syntax[style] || <span class="hljs-string">""</span>;
+            });
+        }
+    }).join(<span class="hljs-string">"\n\n"</span>);	
+}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap for-h2">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <h2>toDOM()</h2>
+<p>A small utility that takes a string of HTML and returns a new HTMLDocument instance. In Node.js, <code>jsdom</code> is used to simulate the DOM.</p><h4>Arguments</h4>
+<ul>
+<li><strong>html</strong> <em>string</em> - A string of HTML.</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>html2md.toDOM = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(html)</span> </span>{
+    <span class="hljs-keyword">var</span> doc;
+
+    <span class="hljs-comment">// clean html before we parse</span>
+    html = html.replace(SCRIPT_REGEX, <span class="hljs-string">''</span>);
+    html = Entities.normalizeXML(html, <span class="hljs-string">'xhtml'</span>);
+
+    <span class="hljs-comment">// browsers</span>
+    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> <span class="hljs-built_in">window</span> !== <span class="hljs-string">"undefined"</span> &amp;&amp; <span class="hljs-built_in">window</span>.document) {
+        <span class="hljs-keyword">var</span> doc = <span class="hljs-built_in">window</span>.document.implementation.createHTMLDocument();
+        doc.documentElement.innerHTML = html;
+    }
+
+    <span class="hljs-comment">// nodejs</span>
+    <span class="hljs-keyword">else</span> {
+        doc = <span class="hljs-built_in">require</span>(<span class="hljs-string">"jsdom"</span>).jsdom(html);
+    }
+
+    <span class="hljs-keyword">return</span> doc;
+}</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>
