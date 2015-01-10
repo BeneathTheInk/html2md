@@ -4,8 +4,8 @@ HTML2MD attempts to convert HTML into Markdown by reducing an HTML document into
 
 HTML2MD does its best job to convert any HTML given to it and it is by no means perfect. Heavily formatted documents, for example, will likely fail to convert properly. A few assumptions are made about the HTML which outline it's limitations:
 
-    * Inline elements do not contain block elements.
-    * Standard HTML block elements are used to define and separate content.
+- Inline elements do not contain block elements.
+- Standard HTML block elements are used to define and separate content.
 
 ## Install
 
